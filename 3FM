@@ -1,0 +1,73 @@
+const url = "https://www.npo3fm.nl/api/tracks"
+const placeholder = "https://www.npo3fm.nl/templates/npo3fm/images/placeholder-1by1.png"
+const logoURL = "http://franklyfilms.com/3fmlogo.png"
+	
+async function createWidget(nowPlaying) {
+	
+	let widget = new ListWidget()
+  
+	// set gradient background
+	let startColor = new Color("#1c1c1c")
+	let endColor = new Color("#1c1c1c")
+	let gradient = new LinearGradient()
+	gradient.colors = [startColor, endColor]
+	gradient.locations = [0.0, 1]
+	widget.backgroundGradient = gradient
+
+	const threefmLogo = await loadImage(logoURL);
+	const logo = widget.addImage(threefmLogo)
+	logo.imageSize = new Size(38,18)
+     logo.rightAlignImage()
+    
+
+	// load image
+	const coverArt = await loadImage(nowPlaying.image_url_400x400);
+	const image = widget.addImage(coverArt)
+	image.imageSize = new Size(90,90)
+	image.cornerRadius = 5
+	image.leftAlignImage()
+     
+	widget.addSpacer(6)
+
+	// add title and artist
+	let titleTxt = widget.addText(nowPlaying.title)
+	titleTxt.font = Font.boldSystemFont(12)
+	titleTxt.textColor = Color.white()
+	titleTxt.leftAlignText()
+	widget.addSpacer(2)
+	
+	let artistTxt = widget.addText(nowPlaying.artist)
+	artistTxt.font = Font.systemFont(10)
+	artistTxt.textColor = Color.white()
+	artistTxt.textOpacity = 0.6
+	artistTxt.leftAlignText()
+  
+	widget.setPadding(-4, 15, 10, 5)
+	widget.url = "npo3fm://"
+	return widget
+}
+  
+// helper function to load and parse a restful json api
+async function loadNowPlaying(coverArt) {
+	const req = new Request(url)
+	const json = await req.loadJSON()
+	
+	return json.data[0]
+}
+
+// helper function to download an image from a given url
+async function loadImage(imgUrl) {
+	const url = imgUrl !== null ? imgUrl : placeholder;
+
+	const req = new Request(url)
+	const image = await req.loadImage()
+	
+	return image
+}
+
+const nowPlaying = await loadNowPlaying()
+
+const widget = await createWidget(nowPlaying)
+
+Script.setWidget(widget)
+Script.complete()
